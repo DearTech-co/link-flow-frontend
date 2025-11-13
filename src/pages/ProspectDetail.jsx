@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   getProspectById,
@@ -29,7 +29,7 @@ const ProspectDetail = () => {
   /**
    * Fetch prospect data
    */
-  const fetchProspect = async () => {
+  const fetchProspect = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await getProspectById(id);
@@ -40,11 +40,11 @@ const ProspectDetail = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchProspect();
-  }, [id]);
+  }, [fetchProspect]);
 
   /**
    * Handle update prospect

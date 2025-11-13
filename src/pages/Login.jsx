@@ -142,6 +142,17 @@ const Login = () => {
             />
           </div>
 
+          <div className="flex items-center justify-end">
+            <div className="text-sm">
+              <Link
+                to="/forgot-password"
+                className="font-medium text-linkedin-500 hover:text-linkedin-600"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+          </div>
+
           <div>
             <Button
               type="submit"
