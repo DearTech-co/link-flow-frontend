@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   getAllProspects,
   deleteProspect,
@@ -10,15 +11,16 @@ import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Loading from '../components/common/Loading';
 import Modal from '../components/common/Modal';
+import EmptyState from '../components/common/EmptyState';
 import ProspectCard from '../components/prospects/ProspectCard';
 import ProspectRow from '../components/prospects/ProspectRow';
+import { useDebounce } from '../hooks/useDebounce';
 
 /**
  * Prospects page
  * Lists all prospects with search, filter, and view options
  */
 const Prospects = () => {
-  const navigate = useNavigate();
   const [prospects, setProspects] = useState([]);
   const [filteredProspects, setFilteredProspects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,6 +30,11 @@ const Prospects = () => {
   const [viewMode, setViewMode] = useState('card'); // 'card' or 'table'
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [prospectToDelete, setProspectToDelete] = useState(null);
+  const [selectedProspects, setSelectedProspects] = useState([]);
+  const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
+
+  // Debounced search term (updates after 300ms of no typing)
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   /**
    * Fetch all prospects
@@ -52,18 +59,19 @@ const Prospects = () => {
 
   /**
    * Filter prospects based on search and status
+   * Uses debounced search term to avoid excessive filtering
    */
   useEffect(() => {
     let filtered = [...prospects];
 
-    // Apply search filter
-    if (searchTerm) {
+    // Apply search filter (debounced)
+    if (debouncedSearchTerm) {
       filtered = filtered.filter(
         (p) =>
-          p.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.jobTitle?.toLowerCase().includes(searchTerm.toLowerCase())
+          p.firstName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          p.lastName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          p.companyName?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+          p.jobTitle?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       );
     }
 
@@ -73,7 +81,7 @@ const Prospects = () => {
     }
 
     setFilteredProspects(filtered);
-  }, [searchTerm, statusFilter, prospects]);
+  }, [debouncedSearchTerm, statusFilter, prospects]);
 
   /**
    * Handle enrich prospect
@@ -81,11 +89,12 @@ const Prospects = () => {
   const handleEnrich = async (prospectId) => {
     try {
       await enrichProspect(prospectId);
+      toast.success('Enrichment started! Check back in a few moments.');
       // Refresh prospects to show updated status
       fetchProspects();
     } catch (err) {
       console.error('Error enriching prospect:', err);
-      alert('Failed to trigger enrichment');
+      toast.error('Failed to trigger enrichment. Please try again.');
     }
   };
 
@@ -96,22 +105,68 @@ const Prospects = () => {
     if (!prospectToDelete) return;
 
     try {
-      await deleteProspect(prospectToDelete);
-      setProspects((prev) => prev.filter((p) => p._id !== prospectToDelete));
+      await deleteProspect(prospectToDelete._id);
+      setProspects((prev) => prev.filter((p) => p._id !== prospectToDelete._id));
+      toast.success(`${prospectToDelete.firstName} ${prospectToDelete.lastName} deleted successfully.`);
       setDeleteModalOpen(false);
       setProspectToDelete(null);
     } catch (err) {
       console.error('Error deleting prospect:', err);
-      alert('Failed to delete prospect');
+      toast.error('Failed to delete prospect. Please try again.');
     }
   };
 
   /**
    * Open delete confirmation modal
    */
-  const confirmDelete = (prospectId) => {
-    setProspectToDelete(prospectId);
+  const confirmDelete = (prospect) => {
+    setProspectToDelete(prospect);
     setDeleteModalOpen(true);
+  };
+
+  /**
+   * Toggle prospect selection
+   */
+  const toggleProspectSelection = (prospectId) => {
+    setSelectedProspects((prev) =>
+      prev.includes(prospectId)
+        ? prev.filter((id) => id !== prospectId)
+        : [...prev, prospectId]
+    );
+  };
+
+  /**
+   * Toggle select all prospects
+   */
+  const toggleSelectAll = () => {
+    if (selectedProspects.length === filteredProspects.length) {
+      setSelectedProspects([]);
+    } else {
+      setSelectedProspects(filteredProspects.map((p) => p._id));
+    }
+  };
+
+  /**
+   * Handle bulk delete
+   */
+  const handleBulkDelete = async () => {
+    if (selectedProspects.length === 0) return;
+
+    try {
+      // Delete all selected prospects
+      await Promise.all(
+        selectedProspects.map((id) => deleteProspect(id))
+      );
+
+      // Update state
+      setProspects((prev) => prev.filter((p) => !selectedProspects.includes(p._id)));
+      toast.success(`${selectedProspects.length} ${selectedProspects.length === 1 ? 'prospect' : 'prospects'} deleted successfully.`);
+      setBulkDeleteModalOpen(false);
+      setSelectedProspects([]);
+    } catch (err) {
+      console.error('Error deleting prospects:', err);
+      toast.error('Failed to delete prospects. Please try again.');
+    }
   };
 
   /**
@@ -135,9 +190,11 @@ const Prospects = () => {
       // Cleanup
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
+
+      toast.success('Prospects exported successfully!');
     } catch (err) {
       console.error('Error exporting prospects:', err);
-      alert('Failed to export prospects');
+      toast.error('Failed to export prospects. Please try again.');
     }
   };
 
@@ -168,6 +225,14 @@ const Prospects = () => {
           </p>
         </div>
         <div className="flex gap-3">
+          {selectedProspects.length > 0 && (
+            <Button
+              variant="danger"
+              onClick={() => setBulkDeleteModalOpen(true)}
+            >
+              Delete Selected ({selectedProspects.length})
+            </Button>
+          )}
           <Button variant="secondary" onClick={handleExport}>
             Export CSV
           </Button>
@@ -224,18 +289,22 @@ const Prospects = () => {
 
       {/* Prospects List */}
       {filteredProspects.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-card p-12 text-center">
-          <p className="text-gray-500">
-            {searchTerm || statusFilter !== 'all'
-              ? 'No prospects match your filters'
-              : 'No prospects yet. Add your first prospect to get started!'}
-          </p>
-          {!searchTerm && statusFilter === 'all' && (
-            <Link to="/prospects/new" className="mt-4 inline-block">
-              <Button variant="primary">Add Your First Prospect</Button>
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          icon={searchTerm || statusFilter !== 'all' ? 'search' : 'prospects'}
+          title={searchTerm || statusFilter !== 'all' ? 'No Results Found' : 'No Prospects Yet'}
+          message={
+            searchTerm || statusFilter !== 'all'
+              ? 'No prospects match your current filters. Try adjusting your search or filter criteria.'
+              : 'Start building your prospect list by adding your first LinkedIn prospect.'
+          }
+          action={
+            !searchTerm && statusFilter === 'all' ? (
+              <Link to="/prospects/new">
+                <Button variant="primary">Add Your First Prospect</Button>
+              </Link>
+            ) : null
+          }
+        />
       ) : viewMode === 'card' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProspects.map((prospect) => (
@@ -244,6 +313,8 @@ const Prospects = () => {
               prospect={prospect}
               onEnrich={handleEnrich}
               onDelete={confirmDelete}
+              isSelected={selectedProspects.includes(prospect._id)}
+              onToggleSelect={toggleProspectSelection}
             />
           ))}
         </div>
@@ -252,22 +323,31 @@ const Prospects = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    checked={selectedProspects.length === filteredProspects.length && filteredProspects.length > 0}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4 text-linkedin-500 focus:ring-linkedin-500 border-gray-300 rounded"
+                    aria-label="Select all prospects"
+                  />
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Job Title
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Company
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   LinkedIn
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -279,6 +359,8 @@ const Prospects = () => {
                   prospect={prospect}
                   onEnrich={handleEnrich}
                   onDelete={confirmDelete}
+                  isSelected={selectedProspects.includes(prospect._id)}
+                  onToggleSelect={toggleProspectSelection}
                 />
               ))}
             </tbody>
@@ -303,7 +385,34 @@ const Prospects = () => {
         }
       >
         <p className="text-gray-700">
-          Are you sure you want to delete this prospect? This action cannot be undone.
+          Are you sure you want to delete{' '}
+          <strong>
+            {prospectToDelete?.firstName} {prospectToDelete?.lastName}
+          </strong>
+          ? This action cannot be undone.
+        </p>
+      </Modal>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <Modal
+        isOpen={bulkDeleteModalOpen}
+        onClose={() => setBulkDeleteModalOpen(false)}
+        title="Delete Multiple Prospects"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setBulkDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleBulkDelete}>
+              Delete {selectedProspects.length} {selectedProspects.length === 1 ? 'Prospect' : 'Prospects'}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Are you sure you want to delete{' '}
+          <strong>{selectedProspects.length} {selectedProspects.length === 1 ? 'prospect' : 'prospects'}</strong>
+          ? This action cannot be undone.
         </p>
       </Modal>
     </div>

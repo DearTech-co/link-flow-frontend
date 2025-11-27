@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { createProspect } from '../api/prospects.api';
 import Card from '../components/common/Card';
 import ProspectForm from '../components/prospects/ProspectForm';
@@ -22,6 +23,8 @@ const NewProspect = () => {
       setError('');
 
       await createProspect(data);
+
+      toast.success('Prospect added successfully!');
 
       // Redirect to prospects list
       navigate('/prospects');

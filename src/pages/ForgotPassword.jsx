@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { forgotPassword } from '../api/auth.api';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
@@ -17,16 +15,13 @@ const ForgotPassword = () => {
     setError('');
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
-        email
-      });
-
-      setMessage(response.data.message);
+      const response = await forgotPassword(email);
+      // client already returns data, so message is at the top level
+      setMessage(response.message || 'Check your email for reset instructions.');
       setEmail(''); // Clear form
-
     } catch (err) {
       console.error('Forgot password error:', err);
-      setError(err.response?.data?.message || 'An error occurred. Please try again.');
+      setError(err.message || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

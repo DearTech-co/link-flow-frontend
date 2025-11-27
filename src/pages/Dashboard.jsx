@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Loading from '../components/common/Loading';
+import EmptyState from '../components/common/EmptyState';
 
 /**
  * Dashboard page
@@ -264,9 +265,18 @@ const Dashboard = () => {
         </div>
 
         {recentProspects.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
-            No prospects yet. Add your first prospect to get started!
-          </p>
+          <div className="py-4">
+            <EmptyState
+              icon="prospects"
+              title="No Prospects Yet"
+              message="Start building your prospect list to see recent activity here."
+              action={
+                <Link to="/prospects/new">
+                  <Button variant="primary">Add Your First Prospect</Button>
+                </Link>
+              }
+            />
+          </div>
         ) : (
           <div className="divide-y divide-gray-200">
             {recentProspects.map((prospect) => (

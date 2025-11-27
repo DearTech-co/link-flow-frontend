@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        // LinkedIn brand colors
+        // LinkedIn brand colors with subtle background tints
         linkedin: {
+          25: '#f5f9fc', // Very subtle tint for backgrounds
           50: '#e7f3ff',
           100: '#d0e7ff',
           200: '#a3cfff',
@@ -29,9 +30,13 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      // Enhanced elevation system (3-tier)
       boxShadow: {
-        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-        'card-hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)', // Level 1
+        'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', // Level 2
+        'lg': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)', // Level 3
+        'xl': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
       },
       animation: {
         'spin-slow': 'spin 2s linear infinite',

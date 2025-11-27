@@ -3,6 +3,7 @@ import clsx from 'clsx';
 /**
  * Button component
  * Reusable button with different variants
+ * WCAG 2.1 AA compliant with 44px minimum touch targets
  */
 const Button = ({
   children,
@@ -16,19 +17,19 @@ const Button = ({
   onClick,
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantClasses = {
-    primary: 'bg-linkedin-500 text-white hover:bg-linkedin-600 focus:ring-linkedin-500',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400',
-    danger: 'bg-error text-white hover:bg-red-600 focus:ring-error',
-    outline: 'border-2 border-linkedin-500 text-linkedin-500 hover:bg-linkedin-50 focus:ring-linkedin-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-400',
+    primary: 'bg-linkedin-500 text-white hover:bg-linkedin-600 focus:ring-linkedin-500 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
+    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400 hover:scale-[1.02] active:scale-[0.98]',
+    danger: 'bg-error text-white hover:bg-red-600 focus:ring-error shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98]',
+    outline: 'border-2 border-linkedin-500 text-linkedin-500 hover:bg-linkedin-50 focus:ring-linkedin-500 hover:shadow-sm active:scale-[0.98]',
+    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-400 active:scale-[0.98]',
   };
 
   const sizeClasses = {
-    small: 'px-3 py-1.5 text-sm',
-    default: 'px-4 py-2 text-base',
+    small: 'px-3 py-2.5 text-sm min-h-[44px]', // WCAG AA compliant touch target
+    default: 'px-4 py-2 text-base min-h-[44px]',
     large: 'px-6 py-3 text-lg',
   };
 

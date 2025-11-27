@@ -6,7 +6,7 @@ import Button from '../common/Button';
  * ProspectCard component
  * Displays prospect information in a card view
  */
-const ProspectCard = ({ prospect, onEnrich, onDelete }) => {
+const ProspectCard = ({ prospect, onEnrich, onDelete, isSelected, onToggleSelect }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'enriched':
@@ -23,6 +23,17 @@ const ProspectCard = ({ prospect, onEnrich, onDelete }) => {
   return (
     <Card hover>
       <div className="space-y-3">
+        {/* Checkbox for bulk selection */}
+        <div className="flex items-center mb-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect(prospect._id)}
+            className="h-4 w-4 text-linkedin-500 focus:ring-linkedin-500 border-gray-300 rounded"
+            aria-label={`Select ${prospect.firstName} ${prospect.lastName}`}
+          />
+        </div>
+
         {/* Header with name and status */}
         <div className="flex items-start justify-between">
           <div>
@@ -98,7 +109,7 @@ const ProspectCard = ({ prospect, onEnrich, onDelete }) => {
           <Button
             variant="danger"
             size="small"
-            onClick={() => onDelete(prospect._id)}
+            onClick={() => onDelete(prospect)}
           >
             Delete
           </Button>

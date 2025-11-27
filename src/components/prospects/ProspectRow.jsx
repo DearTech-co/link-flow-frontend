@@ -5,7 +5,7 @@ import Button from '../common/Button';
  * ProspectRow component
  * Displays prospect information in a table row view
  */
-const ProspectRow = ({ prospect, onEnrich, onDelete }) => {
+const ProspectRow = ({ prospect, onEnrich, onDelete, isSelected, onToggleSelect }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'enriched':
@@ -21,6 +21,15 @@ const ProspectRow = ({ prospect, onEnrich, onDelete }) => {
 
   return (
     <tr className="hover:bg-gray-50">
+      <td className="px-6 py-4 whitespace-nowrap">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect(prospect._id)}
+          className="h-4 w-4 text-linkedin-500 focus:ring-linkedin-500 border-gray-300 rounded"
+          aria-label={`Select ${prospect.firstName} ${prospect.lastName}`}
+        />
+      </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <Link
           to={`/prospects/${prospect._id}`}
@@ -64,7 +73,7 @@ const ProspectRow = ({ prospect, onEnrich, onDelete }) => {
           <Button
             variant="danger"
             size="small"
-            onClick={() => onDelete(prospect._id)}
+            onClick={() => onDelete(prospect)}
           >
             Delete
           </Button>

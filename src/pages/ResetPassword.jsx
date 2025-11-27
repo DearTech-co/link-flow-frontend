@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { validateResetToken, resetPassword } from '../api/auth.api';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -19,21 +17,22 @@ const ResetPassword = () => {
 
   // Validate token on mount
   useEffect(() => {
-    const validateToken = async () => {
+    const checkToken = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/auth/reset-password/${token}`);
+        const response = await validateResetToken(token);
         setIsValidToken(true);
-        setUserEmail(response.data.data.email);
+        // api client returns the data payload directly
+        setUserEmail(response.data?.email || response.email);
       } catch (err) {
         console.error('Token validation error:', err);
-        setError(err.response?.data?.message || 'Invalid or expired reset link');
+        setError(err.message || 'Invalid or expired reset link');
         setIsValidToken(false);
       } finally {
         setIsValidating(false);
       }
     };
 
-    validateToken();
+    checkToken();
   }, [token]);
 
   const handleSubmit = async (e) => {
@@ -54,17 +53,13 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/reset-password/${token}`, {
-        password
-      });
-
+      await resetPassword(token, password);
       setSuccess(true);
 
       // Redirect to login after 3 seconds
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-
     } catch (err) {
       console.error('Reset password error:', err);
       setError(err.response?.data?.message || 'Failed to reset password. Please try again.');

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { createList } from '../api/lists.api';
 import Card from '../components/common/Card';
 import ListForm from '../components/lists/ListForm';
@@ -22,6 +23,8 @@ const NewList = () => {
       setError('');
 
       const response = await createList(data);
+
+      toast.success('List created successfully!');
 
       // Redirect to the newly created list
       navigate(`/lists/${response.data.list._id}`);

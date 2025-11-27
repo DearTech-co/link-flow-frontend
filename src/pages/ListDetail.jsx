@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   getListById,
   updateList,
@@ -12,8 +13,10 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Loading from '../components/common/Loading';
 import Modal from '../components/common/Modal';
+import EmptyState from '../components/common/EmptyState';
 import ListForm from '../components/lists/ListForm';
 import Input from '../components/common/Input';
+import Breadcrumb from '../components/common/Breadcrumb';
 
 /**
  * ListDetail page
@@ -36,7 +39,7 @@ const ListDetail = () => {
   /**
    * Fetch list data
    */
-  const fetchList = async () => {
+  const fetchList = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await getListById(id);
@@ -47,11 +50,11 @@ const ListDetail = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchList();
-  }, [id]);
+  }, [fetchList]);
 
   /**
    * Fetch available prospects when add modal opens
@@ -71,7 +74,7 @@ const ListDetail = () => {
       setAddProspectModalOpen(true);
     } catch (err) {
       console.error('Error fetching prospects:', err);
-      alert('Failed to load prospects');
+      toast.error('Failed to load prospects. Please try again.');
     }
   };
 
@@ -84,9 +87,10 @@ const ListDetail = () => {
       await updateList(id, data);
       await fetchList();
       setIsEditMode(false);
+      toast.success('List updated successfully!');
     } catch (err) {
       console.error('Error updating list:', err);
-      alert('Failed to update list');
+      toast.error('Failed to update list. Please try again.');
     } finally {
       setIsUpdating(false);
     }
@@ -101,7 +105,7 @@ const ListDetail = () => {
       navigate('/lists');
     } catch (err) {
       console.error('Error deleting list:', err);
-      alert('Failed to delete list');
+      toast.error('Failed to delete list. Please try again.');
     }
   };
 
@@ -113,13 +117,15 @@ const ListDetail = () => {
 
     try {
       await addProspectsToList(id, selectedProspects);
+      const count = selectedProspects.length;
+      toast.success(`${count} ${count === 1 ? 'prospect' : 'prospects'} added to list.`);
       await fetchList();
       setAddProspectModalOpen(false);
       setSelectedProspects([]);
       setSearchTerm('');
     } catch (err) {
       console.error('Error adding prospects:', err);
-      alert('Failed to add prospects');
+      toast.error('Failed to add prospects. Please try again.');
     }
   };
 
@@ -129,10 +135,11 @@ const ListDetail = () => {
   const handleRemoveProspect = async (prospectId) => {
     try {
       await removeProspectsFromList(id, [prospectId]);
+      toast.success('Prospect removed from list.');
       await fetchList();
     } catch (err) {
       console.error('Error removing prospect:', err);
-      alert('Failed to remove prospect');
+      toast.error('Failed to remove prospect. Please try again.');
     }
   };
 
@@ -198,6 +205,15 @@ const ListDetail = () => {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        items={[
+          { label: 'Dashboard', path: '/dashboard' },
+          { label: 'Lists', path: '/lists' },
+          { label: list.name, path: `/lists/${id}` },
+        ]}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -229,13 +245,17 @@ const ListDetail = () => {
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Prospects</h2>
 
         {list.prospects.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">
-              No prospects in this list yet
-            </p>
-            <Button variant="primary" onClick={handleOpenAddModal}>
-              Add Your First Prospect
-            </Button>
+          <div className="py-4">
+            <EmptyState
+              icon="prospects"
+              title="No Prospects Yet"
+              message="This list is empty. Start adding prospects to organize and manage them effectively."
+              action={
+                <Button variant="primary" onClick={handleOpenAddModal}>
+                  Add Your First Prospect
+                </Button>
+              }
+            />
           </div>
         ) : (
           <div className="space-y-4">

@@ -62,7 +62,7 @@ const ListCard = ({ list, onDelete }) => {
           <Button
             variant="danger"
             size="small"
-            onClick={() => onDelete(list._id)}
+            onClick={() => onDelete(list)}
           >
             Delete
           </Button>

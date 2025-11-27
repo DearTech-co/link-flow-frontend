@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
+import PasswordStrength from '../components/common/PasswordStrength';
 
 /**
  * Signup page
@@ -204,16 +205,19 @@ const Signup = () => {
               required
             />
 
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              error={errors.password}
-              required
-            />
+            <div>
+              <Input
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+                required
+              />
+              <PasswordStrength password={formData.password} />
+            </div>
 
             <Input
               label="Confirm Password"

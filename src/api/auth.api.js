@@ -45,3 +45,31 @@ export const logout = () => {
   localStorage.removeItem('authToken');
   localStorage.removeItem('user');
 };
+
+/**
+ * Request password reset email
+ * @param {string} email - User's email address
+ * @returns {Promise} Response with success message
+ */
+export const forgotPassword = async (email) => {
+  return apiClient.post('/auth/forgot-password', { email });
+};
+
+/**
+ * Validate password reset token
+ * @param {string} token - Password reset token
+ * @returns {Promise} Response with user email
+ */
+export const validateResetToken = async (token) => {
+  return apiClient.get(`/auth/reset-password/${token}`);
+};
+
+/**
+ * Reset password with token
+ * @param {string} token - Password reset token
+ * @param {string} password - New password
+ * @returns {Promise} Response with success message
+ */
+export const resetPassword = async (token, password) => {
+  return apiClient.post(`/auth/reset-password/${token}`, { password });
+};

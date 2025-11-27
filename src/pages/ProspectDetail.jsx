@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   getProspectById,
   updateProspect,
@@ -11,6 +12,7 @@ import Button from '../components/common/Button';
 import Loading from '../components/common/Loading';
 import Modal from '../components/common/Modal';
 import ProspectForm from '../components/prospects/ProspectForm';
+import Breadcrumb from '../components/common/Breadcrumb';
 
 /**
  * ProspectDetail page
@@ -55,9 +57,10 @@ const ProspectDetail = () => {
       await updateProspect(id, data);
       await fetchProspect(); // Refresh data
       setIsEditMode(false);
+      toast.success('Prospect updated successfully!');
     } catch (err) {
       console.error('Error updating prospect:', err);
-      alert('Failed to update prospect');
+      toast.error('Failed to update prospect. Please try again.');
     } finally {
       setIsUpdating(false);
     }
@@ -69,10 +72,11 @@ const ProspectDetail = () => {
   const handleEnrich = async () => {
     try {
       await enrichProspect(id);
+      toast.success('Enrichment started! This may take a few moments.');
       await fetchProspect(); // Refresh to show updated status
     } catch (err) {
       console.error('Error enriching prospect:', err);
-      alert('Failed to trigger enrichment');
+      toast.error('Failed to trigger enrichment. Please try again.');
     }
   };
 
@@ -85,7 +89,7 @@ const ProspectDetail = () => {
       navigate('/prospects');
     } catch (err) {
       console.error('Error deleting prospect:', err);
-      alert('Failed to delete prospect');
+      toast.error('Failed to delete prospect. Please try again.');
     }
   };
 
@@ -148,6 +152,15 @@ const ProspectDetail = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb
+        items={[
+          { label: 'Dashboard', path: '/dashboard' },
+          { label: 'Prospects', path: '/prospects' },
+          { label: `${prospect.firstName} ${prospect.lastName}`, path: `/prospects/${id}` },
+        ]}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
