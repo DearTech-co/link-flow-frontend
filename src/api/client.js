@@ -1,8 +1,18 @@
 import axios from 'axios';
 
+// Auto-detect API URL based on hostname
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.hostname === 'link-flow.netlify.app'
+      ? 'https://link-flow-backend.fly.dev/api'
+      : 'http://localhost:5005/api';
+  }
+  return 'http://localhost:5005/api'; // Fallback for SSR
+};
+
 // Create axios instance with base configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005/api',
+  baseURL: getApiBaseUrl(),
   timeout: 30000, // 30 seconds
   headers: {
     'Content-Type': 'application/json',
