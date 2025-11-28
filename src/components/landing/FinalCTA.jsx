@@ -41,7 +41,7 @@ function FinalCTA() {
                   <Button
                     variant="primary"
                     size="large"
-                    className="bg-white text-linkedin-500 hover:bg-gray-50 hover:text-linkedin-600 shadow-lg"
+                    className="!bg-white !text-linkedin-600 hover:!bg-linkedin-50 hover:!text-linkedin-700 !shadow-lg !border-0 font-semibold"
                     onClick={() => handleCTAClick('Get Started Free - Final CTA')}
                   >
                     Get Started Free
@@ -52,7 +52,7 @@ function FinalCTA() {
                   <Button
                     variant="outline"
                     size="large"
-                    className="border-2 border-white text-white hover:bg-white/10"
+                    className="!border-2 !border-white !text-white hover:!bg-white/10 hover:!border-white font-semibold"
                     onClick={() => handleCTAClick('Sign In - Final CTA')}
                   >
                     Sign In
