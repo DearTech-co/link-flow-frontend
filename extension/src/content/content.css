@@ -1,0 +1,25 @@
+#linkflow-add-button.linkflow-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 12px 0;
+  border: none;
+  border-radius: 6px;
+  background: #0a66c2;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+#linkflow-add-button.linkflow-button:hover {
+  background: #004182;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+#linkflow-add-button.linkflow-button:active {
+  transform: translateY(1px);
+}

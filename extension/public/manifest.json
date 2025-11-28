@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "LinkFlow",
+  "description": "Add LinkedIn prospects to LinkFlow directly from profile pages.",
+  "version": "0.1.0",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LinkFlow"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://*.linkedin.com/*",
+    "https://link-flow-backend.fly.dev/*",
+    "http://localhost:5005/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.linkedin.com/*",
+        "https://www.linkedin.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "48": "icons/icon-48.svg",
+    "128": "icons/icon-128.svg"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon-16.svg",
+        "icons/icon-48.svg",
+        "icons/icon-128.svg"
+      ],
+      "matches": [
+        "*://*.linkedin.com/*"
+      ]
+    }
+  ]
+}
