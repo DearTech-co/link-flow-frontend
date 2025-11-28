@@ -3,7 +3,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  margin: 12px 0;
+  margin: 0;
   border: none;
   border-radius: 6px;
   background: #0a66c2;
@@ -13,6 +13,12 @@
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  width: auto;
+  max-width: max-content;
+  inline-size: fit-content;
+  white-space: nowrap;
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 #linkflow-add-button.linkflow-button:hover {

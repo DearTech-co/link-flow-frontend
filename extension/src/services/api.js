@@ -129,9 +129,25 @@ export async function verifyToken(token) {
   });
 }
 
+export async function checkProspect(linkedinUrl, token) {
+  const encodedUrl = encodeURIComponent(linkedinUrl);
+  return makeRequest(`/prospects/check?url=${encodedUrl}`, {
+    method: 'GET',
+    token
+  });
+}
+
 export async function createProspect(prospectData, token) {
   return makeRequest('/prospects', {
     method: 'POST',
+    body: prospectData,
+    token
+  });
+}
+
+export async function updateProspect(prospectId, prospectData, token) {
+  return makeRequest(`/prospects/${prospectId}`, {
+    method: 'PUT',
     body: prospectData,
     token
   });

@@ -1,9 +1,11 @@
 import React from 'react';
 
-function ProspectSuccess({ prospect, onAddAnother }) {
+function ProspectSuccess({ prospect, onAddAnother, isUpdate }) {
+  const message = isUpdate ? 'Prospect updated' : 'Prospect saved';
+
   return (
     <div className="success">
-      <p style={{ margin: 0, fontWeight: 700 }}>Prospect saved</p>
+      <p style={{ margin: 0, fontWeight: 700 }}>{message}</p>
       {prospect?.linkedinUrl && (
         <p style={{ margin: '6px 0' }}>
           <a className="link" href={prospect.linkedinUrl} target="_blank" rel="noreferrer">
@@ -12,7 +14,7 @@ function ProspectSuccess({ prospect, onAddAnother }) {
         </p>
       )}
       <button className="btn btn-secondary" onClick={onAddAnother}>
-        Add another
+        {isUpdate ? 'Done' : 'Add another'}
       </button>
     </div>
   );

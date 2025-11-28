@@ -6,7 +6,7 @@ export default defineManifest({
   description: 'Add LinkedIn prospects to LinkFlow directly from profile pages.',
   version: '0.1.0',
   action: {
-    default_popup: 'src/popup/index.html',
+    default_popup: 'src/popup.html',
     default_title: 'LinkFlow'
   },
   background: {

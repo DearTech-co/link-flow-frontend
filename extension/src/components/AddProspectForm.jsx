@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { LINKEDIN_PROFILE_PATTERN } from '../utils/constants.js';
 
-function AddProspectForm({ initialValues, onSubmit, loading }) {
+function AddProspectForm({ initialValues, onSubmit, loading, mode, existingProspect }) {
   const [form, setForm] = useState(initialValues);
   const [validationError, setValidationError] = useState('');
 
@@ -23,8 +23,25 @@ function AddProspectForm({ initialValues, onSubmit, loading }) {
     onSubmit(form);
   };
 
+  const isUpdateMode = mode === 'update' && existingProspect;
+  const buttonText = loading
+    ? (isUpdateMode ? 'Updating...' : 'Saving...')
+    : (isUpdateMode ? 'Update prospect' : 'Save prospect');
+
   return (
     <form className="form" onSubmit={handleSubmit}>
+      {isUpdateMode && (
+        <div style={{
+          padding: '8px 12px',
+          backgroundColor: '#E8F4F8',
+          borderRadius: '4px',
+          marginBottom: '12px',
+          fontSize: '13px',
+          color: '#0073B1'
+        }}>
+          <strong>Update mode:</strong> This prospect already exists in your database.
+        </div>
+      )}
       <label>
         LinkedIn URL
         <input
@@ -33,6 +50,9 @@ function AddProspectForm({ initialValues, onSubmit, loading }) {
           onChange={(e) => updateField('linkedinUrl', e.target.value)}
           placeholder="https://www.linkedin.com/in/username/"
           required
+          readOnly={isUpdateMode}
+          style={isUpdateMode ? { backgroundColor: '#F1F5F9', cursor: 'not-allowed' } : {}}
+          title={isUpdateMode ? 'LinkedIn URL cannot be changed when updating' : ''}
         />
       </label>
       <div className="row">
@@ -85,7 +105,7 @@ function AddProspectForm({ initialValues, onSubmit, loading }) {
       {validationError && <div className="error">{validationError}</div>}
 
       <button className="btn btn-primary" type="submit" disabled={loading}>
-        {loading ? 'Saving...' : 'Save prospect'}
+        {buttonText}
       </button>
     </form>
   );
