@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class', // Enable class-based dark mode
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -26,6 +27,14 @@ export default {
         warning: '#f59e0b',
         error: '#ef4444',
         info: '#3b82f6',
+        // Dark mode colors
+        dark: {
+          bg: '#0a0a0a',
+          card: '#1a1a1a',
+          border: '#2a2a2a',
+          text: '#e5e5e5',
+          'text-secondary': '#a3a3a3',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

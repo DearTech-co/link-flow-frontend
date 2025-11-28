@@ -98,6 +98,7 @@ apiClient.interceptors.response.use(
           }
           return apiClient(originalRequest);
         } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
           clearTokens();
           // Only redirect if not already on login/signup page
           if (

@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from 'react';
+import { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import {
   login as apiLogin,
   signup as apiSignup,
@@ -43,11 +43,11 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
-  const tryRefresh = async (refreshToken) => {
+  const tryRefresh = useCallback(async (refreshToken) => {
     const response = await refreshSession(refreshToken);
     persistSession(response.data);
     return response.data;
-  };
+  }, []);
 
   /**
    * Verify token on mount and restore user session
@@ -81,7 +81,8 @@ export const AuthProvider = ({ children }) => {
       } else if (refreshToken) {
         try {
           await tryRefresh(refreshToken);
-        } catch (error) {
+        } catch (refreshError) {
+          console.error('Refresh failed:', refreshError);
           clearSession();
         }
       }
@@ -90,7 +91,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
-  }, []);
+  }, [tryRefresh]);
 
   /**
    * Login function
