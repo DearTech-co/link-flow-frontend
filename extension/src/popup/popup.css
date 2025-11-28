@@ -76,6 +76,8 @@ textarea {
   font-size: 14px;
   outline: none;
   transition: border 120ms ease, box-shadow 120ms ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 input:focus,
@@ -135,6 +137,7 @@ textarea {
 
 .row > label {
   flex: 1;
+  min-width: 0;
 }
 
 .footer {

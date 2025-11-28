@@ -29,7 +29,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs?.[0];
       const cached = tab ? profileCache.get(tab.id) : null;
-      sendResponse({ tab, profileData: cached || null });
+      if (cached) {
+        sendResponse({ tab, profileData: cached });
+        return;
+      }
+
+      if (!tab?.id) {
+        sendResponse({ tab: tab || null, profileData: null });
+        return;
+      }
+
+      chrome.tabs.sendMessage(tab.id, { type: 'REQUEST_PROFILE_DATA' }, (resp) => {
+        if (chrome.runtime.lastError) {
+          console.warn('[LinkFlow Background] Failed to fetch profile from content script:', chrome.runtime.lastError.message);
+          sendResponse({ tab, profileData: null });
+          return;
+        }
+
+        const profile = resp?.profile || null;
+        if (profile) {
+          const entry = {
+            profile,
+            url: tab.url || null,
+            cachedAt: Date.now()
+          };
+          profileCache.set(tab.id, entry);
+          sendResponse({ tab, profileData: entry });
+        } else {
+          sendResponse({ tab, profileData: null });
+        }
+      });
     });
     return true;
   }
