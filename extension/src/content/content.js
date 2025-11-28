@@ -4,22 +4,60 @@ const INJECT_BUTTON_ID = 'linkflow-add-button';
 let lastUrl = window.location.href;
 let observer = null;
 
-function scrapeProfile() {
-  const fullName = document.querySelector('h1.text-heading-xlarge')?.textContent?.trim() || '';
-  const headline = document.querySelector('.text-body-medium.break-words')?.textContent?.trim()
-    || document.querySelector('.text-body-medium')?.textContent?.trim()
-    || '';
+function getTextFromSelectors(selectors = []) {
+  for (const selector of selectors) {
+    const el = document.querySelector(selector);
+    const text = el?.textContent?.trim();
+    if (text) return text;
+  }
+  return '';
+}
 
-  // Try to derive company from button aria-label
-  const companyButton = Array.from(document.querySelectorAll('button[aria-label]'))
-    .find((btn) => (btn.getAttribute('aria-label') || '').toLowerCase().includes('current company'));
-  const companyName = companyButton?.textContent?.trim() || '';
+function getLatestCompany() {
+  const companyNodes = Array.from(document.querySelectorAll(
+    '[data-view-name="profile-positions"] p[class*="_20c780ba"],' +
+    'section[id*="experience"] p[class*="_20c780ba"],' +
+    'p[class*="_20c780ba"]'
+  ));
+
+  const companyText = companyNodes
+    .map((el) => el?.textContent?.trim())
+    .filter(Boolean);
+
+  const selected = companyText.find((txt) => txt.includes('·') && !/\d/.test(txt))
+    || companyText.find((txt) => !/\d/.test(txt))
+    || companyText[0]
+    || getTextFromSelectors(['button[aria-label*="current company" i]']);
+
+  if (!selected) return '';
+
+  return selected.includes('·') ? selected.split('·')[0].trim() : selected;
+}
+
+function scrapeProfile() {
+  const fullName = getTextFromSelectors([
+    'h1.text-heading-xlarge',
+    '[data-view-name="profile-top-card"] h1',
+    '[data-view-name="profile-top-card"] p[class*="_7341beb6"]',
+    '[data-view-name="profile-top-card"] p',
+    'main h1'
+  ]);
+
+  const headline = getTextFromSelectors([
+    '.text-body-medium.break-words',
+    '[data-view-name="profile-top-card"] .text-body-medium',
+    '[data-view-name="profile-top-card"] p[class*="_7af7ea9c"]',
+    '[data-view-name="profile-top-card"] p:nth-of-type(2)'
+  ]);
+
+  const companyName = getLatestCompany();
 
   const profileId = extractProfileId(window.location.href);
   const linkedinUrl = buildLinkedInUrl(profileId) || window.location.href;
 
-  const [firstName = '', ...rest] = fullName.split(' ').filter(Boolean);
-  const lastName = rest.join(' ');
+  const nameParts = fullName.split(' ').filter(Boolean);
+  const firstName = nameParts.shift() || '';
+  const lastName = nameParts.join(' ');
 
   return {
     linkedinUrl,
