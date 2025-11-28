@@ -22,7 +22,41 @@ function getExtensionOrigin() {
   return null;
 }
 
-async function makeRequest(path, { method = 'GET', body, token, headers = {}, credentials } = {}) {
+async function refreshAccessToken() {
+  const refreshToken = await (await import('./storage.js')).getRefreshToken();
+  const originHeader = getExtensionOrigin();
+  if (!refreshToken) {
+    throw new ApiError('No refresh token available', 401);
+  }
+
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(originHeader ? { Origin: originHeader } : {})
+    },
+    body: JSON.stringify({ refreshToken })
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    /* ignore */
+  }
+
+  if (!response.ok) {
+    throw new ApiError(data?.message || 'Failed to refresh session', response.status);
+  }
+
+  const { token: accessToken, refreshToken: nextRefreshToken } = data?.data || {};
+  const { setAuthToken, setRefreshToken } = await import('./storage.js');
+  if (accessToken) await setAuthToken(accessToken);
+  if (nextRefreshToken) await setRefreshToken(nextRefreshToken);
+  return accessToken;
+}
+
+async function makeRequest(path, { method = 'GET', body, token, headers = {}, credentials, retry } = {}) {
   const url = `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
   const originHeader = getExtensionOrigin();
 
@@ -51,6 +85,16 @@ async function makeRequest(path, { method = 'GET', body, token, headers = {}, cr
       data = await response.json();
     } catch (_) {
       /* ignore non-JSON */
+    }
+
+    if (response.status === 401 && !retry) {
+      try {
+        const nextToken = await refreshAccessToken();
+        return makeRequest(path, { method, body, token: nextToken, headers, credentials, retry: true });
+      } catch (refreshErr) {
+        console.error('[LinkFlow API] Refresh failed:', refreshErr);
+        throw refreshErr;
+      }
     }
 
     if (!response.ok) {

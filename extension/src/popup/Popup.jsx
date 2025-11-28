@@ -1,6 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { login, verifyToken, createProspect } from '../services/api.js';
-import { getAuthToken, setAuthToken, clearAuthToken } from '../services/storage.js';
+import {
+  getAuthToken,
+  setAuthToken,
+  clearAuthToken,
+  getRefreshToken,
+  setRefreshToken,
+  clearRefreshToken
+} from '../services/storage.js';
 import LoginForm from '../components/LoginForm.jsx';
 import AddProspectForm from '../components/AddProspectForm.jsx';
 import ProspectSuccess from '../components/ProspectSuccess.jsx';
@@ -45,26 +52,28 @@ function Popup() {
   useEffect(() => {
     async function init() {
       try {
-        const [storedToken, activeProfile] = await Promise.all([
+        const [storedToken, storedRefreshToken, activeProfile] = await Promise.all([
           getAuthToken(),
+          getRefreshToken(),
           getActiveProfile()
         ]);
 
-        console.log('[LinkFlow Popup] Initializing with stored token:', storedToken ? 'Found' : 'Not found');
+        console.log('[LinkFlow Popup] Initializing with stored token:', storedToken ? 'Found' : 'Not found', 'Refresh:', storedRefreshToken ? 'Found' : 'Not found');
         setProfile(activeProfile);
 
-        if (storedToken) {
+        if (storedToken || storedRefreshToken) {
           setAuthenticating(true);
           try {
-            const verified = await verifyToken(storedToken);
+            const verified = await verifyToken(storedToken || undefined);
             console.log('[LinkFlow Popup] Token verified:', verified?.data?.user?.email);
-            setToken(storedToken);
+            setToken(storedToken || verified?.data?.token || null);
             setUser(verified?.data?.user || null);
           } catch (err) {
             console.error('[LinkFlow Popup] Token verification failed:', err);
             // Only clear token if it's actually invalid (401), not for network errors
             if (err?.status === 401) {
               await clearAuthToken();
+              await clearRefreshToken();
               setToken(null);
               setUser(null);
               setError('Session expired. Please login again.');
@@ -94,11 +103,15 @@ function Popup() {
     try {
       const res = await login(email, password);
       const nextToken = res?.data?.token;
+      const nextRefreshToken = res?.data?.refreshToken;
       const nextUser = res?.data?.user;
       if (!nextToken) {
         throw new Error('No token returned from API.');
       }
       await setAuthToken(nextToken);
+      if (nextRefreshToken) {
+        await setRefreshToken(nextRefreshToken);
+      }
       setToken(nextToken);
       setUser(nextUser || null);
     } catch (err) {
@@ -127,6 +140,7 @@ function Popup() {
 
   const handleLogout = async () => {
     await clearAuthToken();
+    await clearRefreshToken();
     setToken(null);
     setUser(null);
     setLastProspect(null);

@@ -1,5 +1,23 @@
 import axios from 'axios';
 
+const ACCESS_TOKEN_KEY = 'authToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+
+const setTokens = (accessToken, refreshToken) => {
+  if (accessToken) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  }
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
+};
+
+const clearTokens = () => {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem('user');
+};
+
 // Choose API base URL from env, falling back to production backend
 const envUrl = import.meta.env?.VITE_API_BASE_URL || import.meta.env?.VITE_API_URL;
 const apiBaseUrl = (envUrl || 'https://link-flow-backend.fly.dev/api').replace(/\/+$/, '');
@@ -17,7 +35,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // Get token from localStorage
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -30,46 +48,78 @@ apiClient.interceptors.request.use(
   }
 );
 
+let refreshRequest = null;
+
+const refreshAccessToken = async () => {
+  if (refreshRequest) return refreshRequest;
+
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  refreshRequest = apiClient.post('/auth/refresh', { refreshToken });
+
+  try {
+    const response = await refreshRequest;
+    const { token: newAccessToken, refreshToken: newRefreshToken } = response.data?.data || {};
+    setTokens(newAccessToken, newRefreshToken);
+    return newAccessToken;
+  } finally {
+    refreshRequest = null;
+  }
+};
+
 // Response interceptor - Handle errors globally
 apiClient.interceptors.response.use(
   (response) => {
     // Return the data directly for successful responses
     return response.data;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
     // Handle different types of errors
     if (error.response) {
-      // Server responded with error status
       const { status, data } = error.response;
 
-      switch (status) {
-        case 401:
-          // Unauthorized - clear token and redirect to login
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-
+      if (
+        status === 401 &&
+        !originalRequest._retry &&
+        !originalRequest.url.includes('/auth/login') &&
+        !originalRequest.url.includes('/auth/signup') &&
+        !originalRequest.url.includes('/auth/refresh')
+      ) {
+        originalRequest._retry = true;
+        try {
+          const newAccessToken = await refreshAccessToken();
+          if (newAccessToken) {
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          }
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          clearTokens();
           // Only redirect if not already on login/signup page
-          if (!window.location.pathname.includes('/login') &&
-              !window.location.pathname.includes('/signup')) {
+          if (
+            typeof window !== 'undefined' &&
+            !window.location.pathname.includes('/login') &&
+            !window.location.pathname.includes('/signup')
+          ) {
             window.location.href = '/login';
           }
-          break;
+        }
+      }
 
+      switch (status) {
         case 403:
-          // Forbidden - user doesn't have permission
           console.error('Access forbidden:', data.message);
           break;
-
         case 404:
-          // Not found
           console.error('Resource not found:', data.message);
           break;
-
         case 500:
-          // Server error
           console.error('Server error:', data.message);
           break;
-
         default:
           console.error('API error:', data.message);
       }

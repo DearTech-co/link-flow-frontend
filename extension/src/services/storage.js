@@ -1,4 +1,5 @@
 const TOKEN_KEY = 'authToken';
+const REFRESH_TOKEN_KEY = 'refreshToken';
 
 function promisifyChrome(fn) {
   return (...args) =>
@@ -32,4 +33,17 @@ export async function setAuthToken(token) {
 
 export async function clearAuthToken() {
   await removeFromStorage([TOKEN_KEY]);
+}
+
+export async function getRefreshToken() {
+  const { [REFRESH_TOKEN_KEY]: token } = await getFromStorage([REFRESH_TOKEN_KEY]);
+  return token || null;
+}
+
+export async function setRefreshToken(token) {
+  await setInStorage({ [REFRESH_TOKEN_KEY]: token });
+}
+
+export async function clearRefreshToken() {
+  await removeFromStorage([REFRESH_TOKEN_KEY]);
 }

@@ -30,6 +30,15 @@ export const login = async (credentials) => {
 };
 
 /**
+ * Refresh access token using a refresh token
+ * @param {string} refreshToken - Refresh token
+ * @returns {Promise} Response with new access and refresh tokens
+ */
+export const refreshSession = async (refreshToken) => {
+  return apiClient.post('/auth/refresh', { refreshToken });
+};
+
+/**
  * Verify the current user's token
  * @returns {Promise} Response with user data
  */
@@ -38,12 +47,19 @@ export const verifyToken = async () => {
 };
 
 /**
- * Log out the current user (client-side only)
- * Clears token from localStorage
+ * Log out the current user
  */
 export const logout = () => {
+  const refreshToken = localStorage.getItem('refreshToken');
   localStorage.removeItem('authToken');
+  localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
+
+  if (refreshToken) {
+    apiClient.post('/auth/logout', { refreshToken }).catch(() => {
+      // Swallow errors on logout to avoid blocking client clear
+    });
+  }
 };
 
 /**

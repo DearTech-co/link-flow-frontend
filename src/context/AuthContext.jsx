@@ -1,5 +1,11 @@
 import { createContext, useState, useEffect, useContext } from 'react';
-import { login as apiLogin, signup as apiSignup, logout as apiLogout, verifyToken } from '../api/auth.api';
+import {
+  login as apiLogin,
+  signup as apiSignup,
+  logout as apiLogout,
+  verifyToken,
+  refreshSession
+} from '../api/auth.api';
 
 // Create the context
 const AuthContext = createContext(null);
@@ -14,12 +20,42 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const persistSession = (data) => {
+    const payload = data?.data || data;
+    if (payload?.token) {
+      localStorage.setItem('authToken', payload.token);
+    }
+    if (payload?.refreshToken) {
+      localStorage.setItem('refreshToken', payload.refreshToken);
+    }
+    if (payload?.user) {
+      localStorage.setItem('user', JSON.stringify(payload.user));
+      setUser(payload.user);
+    }
+    setIsAuthenticated(true);
+  };
+
+  const clearSession = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  const tryRefresh = async (refreshToken) => {
+    const response = await refreshSession(refreshToken);
+    persistSession(response.data);
+    return response.data;
+  };
+
   /**
    * Verify token on mount and restore user session
    */
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('authToken');
+      const refreshToken = localStorage.getItem('refreshToken');
       const storedUser = localStorage.getItem('user');
 
       if (token && storedUser) {
@@ -30,9 +66,23 @@ export const AuthProvider = ({ children }) => {
           setIsAuthenticated(true);
         } catch (error) {
           console.error('Token verification failed:', error);
-          // Token is invalid, clear storage
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
+          // Token invalid: attempt refresh if available
+          if (refreshToken) {
+            try {
+              await tryRefresh(refreshToken);
+            } catch (refreshError) {
+              console.error('Refresh failed:', refreshError);
+              clearSession();
+            }
+          } else {
+            clearSession();
+          }
+        }
+      } else if (refreshToken) {
+        try {
+          await tryRefresh(refreshToken);
+        } catch (error) {
+          clearSession();
         }
       }
 
@@ -53,12 +103,8 @@ export const AuthProvider = ({ children }) => {
 
       const response = await apiLogin(credentials);
 
-      // Store token and user data
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      setUser(response.data.user);
-      setIsAuthenticated(true);
+      // Store tokens and user data
+      persistSession(response.data);
 
       return { success: true, data: response.data };
     } catch (error) {
@@ -80,12 +126,8 @@ export const AuthProvider = ({ children }) => {
 
       const response = await apiSignup(userData);
 
-      // Store token and user data
-      localStorage.setItem('authToken', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-
-      setUser(response.data.user);
-      setIsAuthenticated(true);
+      // Store tokens and user data
+      persistSession(response.data);
 
       return { success: true, data: response.data };
     } catch (error) {
@@ -101,8 +143,7 @@ export const AuthProvider = ({ children }) => {
    */
   const logout = () => {
     apiLogout();
-    setUser(null);
-    setIsAuthenticated(false);
+    clearSession();
     setError(null);
   };
 
