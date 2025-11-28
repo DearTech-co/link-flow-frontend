@@ -29,3 +29,6 @@ CLAUDE.md
 .claude
 docs
 
+
+# Local Netlify folder
+.netlify
