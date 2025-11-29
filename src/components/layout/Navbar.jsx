@@ -26,7 +26,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo and brand */}
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex items-center">
+            <Link to="/" className="flex items-center">
               <div className="flex-shrink-0">
                 <svg
                   className="h-8 w-8 text-linkedin-500"
