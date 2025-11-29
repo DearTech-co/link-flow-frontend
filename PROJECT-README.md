@@ -171,8 +171,7 @@ Final Project/
 │   ├── TASKS.md                # Project task checklist
 │   └── project-brief.md        # Original project brief
 │
-├── CLAUDE.md                   # Development guide for Claude Code
-└── README.md                   # This file
+└── README.md                   # Project overview
 ```
 
 ---
@@ -323,7 +322,6 @@ This project uses **two separate Git repositories** (bootcamp requirement):
 - **[Backend Documentation](./link-flow-backend/README.md)** - API endpoints, setup, and deployment
 - **[Frontend Documentation](./link-flow-frontend/README.md)** - Features, components, and configuration
 - **[Project Tasks](./docs/TASKS.md)** - Complete task checklist with status
-- **[Development Guide](./CLAUDE.md)** - Technical architecture and patterns
 
 ---
 
@@ -361,7 +359,7 @@ This project uses **two separate Git repositories** (bootcamp requirement):
 
 **Day 1:** Documentation + GitHub Push
 - ✅ Update TASKS.md
-- ✅ Update CLAUDE.md
+- ✅ Update documentation files
 - ✅ Create Frontend README
 - ✅ Create Root README
 - [ ] Update Backend README with deployment info
@@ -429,7 +427,6 @@ Final Project: LinkFlow
 - **IronHack** for the bootcamp training and support
 - **Clay.com** for data enrichment API
 - **Loops.so** for email service
-- **Claude Code** for development assistance
 
 ---
 

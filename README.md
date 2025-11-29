@@ -253,7 +253,7 @@ vercel --prod
 
 - [Backend API Documentation](../link-flow-backend/README.md)
 - [Project Tasks](../docs/TASKS.md)
-- [Claude Code Guide](../CLAUDE.md)
+- [Project Overview](../README.md)
 
 ## 🎓 Bootcamp Submission
 
